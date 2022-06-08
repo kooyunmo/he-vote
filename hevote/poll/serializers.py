@@ -15,3 +15,8 @@ class BallotSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ballot
         fields = ['candidate_id',]
+
+
+class TallySerializer(serializers.Serializer):
+    candidate_id = serializers.IntegerField()
+    votes = serializers.IntegerField()

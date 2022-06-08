@@ -8,6 +8,7 @@ from poll import views
 router = DefaultRouter()
 
 router.register(r'cast', views.CastViewSet, basename='cast')
+router.register(r'tally', views.TallyViewSet, basename='tally')
 
 urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

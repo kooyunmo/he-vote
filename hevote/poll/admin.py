@@ -1,7 +1,6 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
-from poll.models import Candidate, Ballot, GenderCandidate, User
+from poll.models import Candidate, Ballot, CandidateBallot, User
 
 
 @admin.register(User)
@@ -31,26 +30,20 @@ class BallotAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
 
 
-@admin.register(GenderCandidate)
-class GenderCandidateAdmin(admin.ModelAdmin):
+@admin.register(CandidateBallot)
+class CandidateBallotAdmin(admin.ModelAdmin):
     list_display = (
         'id',
-        'male_washington',
-        'female_washington',
-        'male_adams',
-        'female_adams',
-        'male_jefferson',
-        'female_jefferson',
+        'washington',
+        'adams',
+        'jefferson',
         'created_at',
         'updated_at',
     )
     search_fields = (
         'id',
-        'male_washington',
-        'female_washington',
-        'male_adams',
-        'female_adams',
-        'male_jefferson',
-        'female_jefferson',
+        'washington',
+        'adams',
+        'jefferson',
     )
     date_hierarchy = 'created_at'

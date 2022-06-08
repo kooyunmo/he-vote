@@ -21,13 +21,10 @@ class Ballot(TimestampMixin):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
 
 
-class GenderCandidate(TimestampMixin):
-    male_washington = models.BigIntegerField()
-    female_washington = models.BigIntegerField()
-    male_adams = models.BigIntegerField()
-    female_adams = models.BigIntegerField()
-    male_jefferson = models.BigIntegerField()
-    female_jefferson = models.BigIntegerField()
+class CandidateBallot(TimestampMixin):
+    washington = models.BigIntegerField()
+    adams = models.BigIntegerField()
+    jefferson = models.BigIntegerField()
 
 
 class User(AbstractUser):
