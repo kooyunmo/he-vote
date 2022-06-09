@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from poll.models import Candidate, Ballot, CandidateBallot, User
+from poll.models import Candidate, Ballot, ASHECandidateBallot, BFVCandidateBallot, PaillierCandidateBallot, User
 
 
 @admin.register(User)
@@ -30,8 +30,46 @@ class BallotAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
 
 
-@admin.register(CandidateBallot)
-class CandidateBallotAdmin(admin.ModelAdmin):
+@admin.register(ASHECandidateBallot)
+class ASHECandidateBallotAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'washington',
+        'adams',
+        'jefferson',
+        'created_at',
+        'updated_at',
+    )
+    search_fields = (
+        'id',
+        'washington',
+        'adams',
+        'jefferson',
+    )
+    date_hierarchy = 'created_at'
+
+
+@admin.register(BFVCandidateBallot)
+class BFVCandidateBallotAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'washington',
+        'adams',
+        'jefferson',
+        'created_at',
+        'updated_at',
+    )
+    search_fields = (
+        'id',
+        'washington',
+        'adams',
+        'jefferson',
+    )
+    date_hierarchy = 'created_at'
+
+
+@admin.register(PaillierCandidateBallot)
+class PaillierCandidateBallotAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'washington',

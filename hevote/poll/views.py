@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Type
+from typing import Dict, Type, Union
 
 from django.db.models import Sum
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -7,26 +7,42 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED
 
-from poll.errors import NotAuthenticatedError, NotFoundError, ParseError
-from poll.serializers import TallySerializer, WritableBallotSerializer, BallotSerializer
-from poll.models import Ballot, Candidate, CandidateBallot
-from poll.cipher.base import CipherBase
 from poll.cipher.ashe import ASHECipher
+from poll.cipher.base import CipherBase
+from poll.cipher.bfv import BFVCipher
+from poll.cipher.paillier import PaillierCipher
+from poll.errors import NotAuthenticatedError, NotFoundError, ParseError
+from poll.models import Ballot, Candidate, ASHECandidateBallot, BFVCandidateBallot, PaillierCandidateBallot
+from poll.serializers import TallySerializer, WritableBallotSerializer, BallotSerializer
 
 
 class CryptoMixin(viewsets.ViewSet):
-    def initialize(self, request: Request, cipher: Optional[str]):
+    def initialize(self, request: Request, cipher: str):
         if not request.user.is_authenticated:
             raise NotAuthenticatedError
 
         cipher_cls_map: Dict[str, Type[CipherBase]] = {
             'ashe': ASHECipher,
+            'bfv': BFVCipher,
+            'paillier': PaillierCipher,
         }
-        if cipher is not None:
-            try:
-                self.cipher = cipher_cls_map[cipher]()
-            except KeyError as exc:
-                raise ParseError from exc
+        cipher_ballot_map: Dict[str, Union[Type[ASHECandidateBallot],
+                                           Type[BFVCandidateBallot],
+                                           Type[PaillierCandidateBallot]]] = {
+            'ashe': ASHECandidateBallot,
+            'bfv': BFVCandidateBallot,
+            'paillier': PaillierCandidateBallot,
+        }
+
+        try:
+            self.cipher = cipher_cls_map[cipher]()
+        except KeyError as exc:
+            raise ParseError from exc
+
+        try:
+            self.ballot_class = cipher_ballot_map[cipher]
+        except KeyError as exc:
+            raise ParseError from exc
 
 
 class CastViewSet(CryptoMixin):
@@ -74,7 +90,7 @@ class CastViewSet(CryptoMixin):
                 )
                 field_dict[field] = null_ciphertext
 
-        cand_ballot = CandidateBallot(**field_dict)
+        cand_ballot = self.ballot_class(**field_dict)
         cand_ballot.save()
 
         return Response(BallotSerializer(ballot).data, status=HTTP_201_CREATED)        
@@ -89,14 +105,28 @@ class TallyViewSet(CryptoMixin):
     )
     def list(self, request: Request) -> Response:
         self.initialize(request, request.query_params['cipher'])
-        cand_ballots = CandidateBallot.objects.all()
+        cand_ballots = self.ballot_class.objects.all()
         ballots = Ballot.objects.all()
         start_id = ballots.first().id
         end_id = ballots.last().id
 
-        washington_esum = cand_ballots.aggregate(Sum('washington'))['washington__sum']
-        adams_esum = cand_ballots.aggregate(Sum('adams'))['adams__sum']
-        jefferson_esum = cand_ballots.aggregate(Sum('jefferson'))['jefferson__sum']
+        washington_esum = None
+        adams_esum = None
+        jefferson_esum = None
+
+        for i, ballot in enumerate(cand_ballots):
+            if i == 0:
+                washington_esum = ballot.washington
+                adams_esum = ballot.adams
+                jefferson_esum = ballot.jefferson
+            else:
+                washington_esum = washington_esum + ballot.washington
+                adams_esum = adams_esum + ballot.adams
+                jefferson_esum = jefferson_esum + ballot.jefferson
+
+        # washington_esum = cand_ballots.aggregate(Sum('washington'))['washington__sum']
+        # adams_esum = cand_ballots.aggregate(Sum('adams'))['adams__sum']
+        # jefferson_esum = cand_ballots.aggregate(Sum('jefferson'))['jefferson__sum']
 
         washington_sum = self.cipher.decrypt_sum(
             start_id=start_id - 1,

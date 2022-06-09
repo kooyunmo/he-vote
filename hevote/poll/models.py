@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from picklefield.fields import PickledObjectField
 
 
 class TimestampMixin(models.Model):
@@ -21,10 +22,22 @@ class Ballot(TimestampMixin):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
 
 
-class CandidateBallot(TimestampMixin):
+class ASHECandidateBallot(TimestampMixin):
     washington = models.BigIntegerField()
     adams = models.BigIntegerField()
     jefferson = models.BigIntegerField()
+
+
+class BFVCandidateBallot(TimestampMixin):
+    washington = PickledObjectField()
+    adams = PickledObjectField()
+    jefferson = PickledObjectField()
+
+
+class PaillierCandidateBallot(TimestampMixin):
+    washington = PickledObjectField()
+    adams = PickledObjectField()
+    jefferson = PickledObjectField()
 
 
 class User(AbstractUser):
