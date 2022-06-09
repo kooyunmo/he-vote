@@ -1,4 +1,4 @@
-from typing import Dict, Type
+from typing import Dict, Optional, Type
 
 from django.db.models import Sum
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -14,24 +14,34 @@ from poll.cipher.base import CipherBase
 from poll.cipher.ashe import ASHECipher
 
 
-class CastViewSet(viewsets.ViewSet):
-    def initialize(self, request: Request):
+class CryptoMixin(viewsets.ViewSet):
+    def initialize(self, request: Request, cipher: Optional[str]):
         if not request.user.is_authenticated:
             raise NotAuthenticatedError
 
-        self.cipher = ASHECipher()
+        cipher_cls_map: Dict[str, Type[CipherBase]] = {
+            'ashe': ASHECipher,
+        }
+        if cipher is not None:
+            try:
+                self.cipher = cipher_cls_map[cipher]()
+            except KeyError as exc:
+                raise ParseError from exc
 
+
+class CastViewSet(CryptoMixin):
     @extend_schema(
         request=WritableBallotSerializer,
         responses={200: BallotSerializer}
     )
     def create(self, request: Request) -> Response:
-        self.initialize(request)
         serializer = WritableBallotSerializer(data=request.data)
         if not serializer.is_valid():
             raise ParseError(repr(serializer.errors))
 
         candidate_id = serializer.validated_data['candidate_id']
+        cipher = serializer.validated_data['cipher']
+        self.initialize(request, cipher)
 
         try:
             cand = Candidate.objects.get(pk=candidate_id)
@@ -70,22 +80,7 @@ class CastViewSet(viewsets.ViewSet):
         return Response(BallotSerializer(ballot).data, status=HTTP_201_CREATED)        
 
 
-class TallyViewSet(viewsets.ViewSet):
-    def initialize(self, request: Request):
-        if not request.user.is_authenticated:
-            raise NotAuthenticatedError
-
-        params = request.query_params
-        cipher_cls_map: Dict[str, Type[CipherBase]] = {
-            'ashe': ASHECipher,
-            # TODO: Add other schemes
-        }
-
-        try:
-            self.cipher = cipher_cls_map[params['cipher']]()
-        except KeyError as exc:
-            raise ParseError from exc
-
+class TallyViewSet(CryptoMixin):
     @extend_schema(
         parameters=[
             OpenApiParameter(name='cipher', required=True, type=str)
@@ -93,7 +88,7 @@ class TallyViewSet(viewsets.ViewSet):
         responses={200: TallySerializer}
     )
     def list(self, request: Request) -> Response:
-        self.initialize(request)
+        self.initialize(request, request.query_params['cipher'])
         cand_ballots = CandidateBallot.objects.all()
         ballots = Ballot.objects.all()
         start_id = ballots.first().id
