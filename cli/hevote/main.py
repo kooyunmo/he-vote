@@ -3,8 +3,10 @@ from enum import Enum
 import requests
 import typer
 import plotext as plt
-from cli.hevote.cast import CastApp
+from rich.table import Table
+from rich.console import Console
 
+from hevote.cast import CastApp
 from hevote.utils import (
     TokenType,
     auto_token_refresh,
@@ -69,9 +71,25 @@ def result(
     except requests.HTTPError:
         secho_error_and_exit("Failed to get results...")
     res = r.json()
+
     cands = ["Washington", "Adams", "Jefferson"]
+
+    console = Console()
+    table = Table(title="Vote result")
+    for cand in cands:
+        table.add_column(cand)
+
     votes = [ r['votes'] for r in res ]
-    plt.bar(cands, votes)
+    table.add_row(*list(map(str, votes)))
+    console.print(table)
+
+    total = sum(votes)
+    vote_percents = [ v / total * 100 for v in votes ]
+
+    plt.bar(cands, vote_percents)
     plt.clc()
-    plt.plot_size(100, 50)
+    plt.plot_size(100, 60)
+    plt.ylim(0, 100)
+    plt.yfrequency(11)
+    plt.title("Vote Result")
     plt.show()
