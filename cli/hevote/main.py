@@ -3,8 +3,16 @@ from enum import Enum
 import requests
 import typer
 import plotext as plt
+from cli.hevote.cast import CastApp
 
-from hevote.utils import TokenType, auto_token_refresh, get_auth_header, get_url, secho_error_and_exit, update_token
+from hevote.utils import (
+    TokenType,
+    auto_token_refresh,
+    get_auth_header,
+    get_url,
+    secho_error_and_exit,
+    update_token,
+)
 
 
 app = typer.Typer(
@@ -31,9 +39,13 @@ def login(
     typer.secho("Welcome!", fg=typer.colors.GREEN)
 
 
+@auto_token_refresh
 @app.command(help="Cast a vote")
 def cast():
-    ...
+    try:
+        CastApp.run(title="YOUR VOTE IS YOUR VOICE")
+    except requests.HTTPError:
+        secho_error_and_exit("Failed to cast a vote...")
 
 
 class HEScheme(str, Enum):
@@ -61,5 +73,5 @@ def result(
     votes = [ r['votes'] for r in res ]
     plt.bar(cands, votes)
     plt.clc()
-    plt.plot_size(50, 20)
+    plt.plot_size(100, 50)
     plt.show()
