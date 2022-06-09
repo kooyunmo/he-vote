@@ -29,6 +29,7 @@ TEST_DEPS = [
     "pytest-benchmark==3.4.1",
     "pytest-lazy-fixture==0.6.3",
     "requests-mock>=1.9.3",
+    "pyfiglet==0.8.post1",
 ]
 
 setup(
