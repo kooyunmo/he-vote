@@ -19,6 +19,7 @@ COMMON_DEPS = [
     "typer>=0.4.0",
     "rich>=12.2.0",
     "plotext>=5.0.2",
+    "pyfiglet==0.8.post1",
 ]
 
 TEST_DEPS = [
@@ -29,7 +30,6 @@ TEST_DEPS = [
     "pytest-benchmark==3.4.1",
     "pytest-lazy-fixture==0.6.3",
     "requests-mock>=1.9.3",
-    "pyfiglet==0.8.post1",
 ]
 
 setup(
