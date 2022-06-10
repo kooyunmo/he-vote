@@ -53,7 +53,7 @@ def cast():
 class HEScheme(str, Enum):
     ASHE = "ashe"
     PAILLIER = "paillier"
-    BGV = "bgv"
+    BFV = "bfv"
 
 
 @auto_token_refresh
@@ -92,4 +92,27 @@ def result(
     plt.ylim(0, 100)
     plt.yfrequency(11)
     plt.title("Vote Result")
+    plt.show()
+
+    table = Table(title="Vote result")
+    typer.secho(f"Latency: {res[0]['latency']:.5f}")
+
+
+@auto_token_refresh
+@app.command(help="Show results")
+def compare():
+    latencies = []
+    for e in HEScheme:
+        r = requests.get(get_url('tally/'), headers=get_auth_header(), params={'cipher': e.value})
+        try:
+            r.raise_for_status()
+        except requests.HTTPError:
+            secho_error_and_exit("Failed to get results...")
+        res = r.json()
+        latencies.append(res[0]['latency'])
+
+    plt.bar([e.value for e in HEScheme], latencies, orientation='horizontal', width=3/5)
+    plt.clc()
+    plt.plot_size(100, 30)
+    plt.title("Latency of HE schemes")
     plt.show()
