@@ -20,3 +20,4 @@ class BallotSerializer(serializers.ModelSerializer):
 class TallySerializer(serializers.Serializer):
     candidate_id = serializers.IntegerField()
     votes = serializers.IntegerField()
+    latency = serializers.FloatField()
