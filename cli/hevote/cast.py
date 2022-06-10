@@ -5,10 +5,10 @@ from rich.text import Text
 from textual.app import App
 from textual.reactive import Reactive
 from textual.widget import Widget
-from textual.widgets import Footer, Header
+from textual.widgets import Footer, Header, Placeholder
 from pyfiglet import Figlet
 
-from hevote.utils import get_auth_header, get_url, secho_error_and_exit
+from hevote.utils import get_auth_header, get_url
 
 
 class FigletText:
@@ -39,17 +39,26 @@ class FigletText:
 
 class Hover(Widget):
     mouse_over = Reactive(False)
+    clicked = Reactive(False)
 
     def render(self) -> Panel:
-        return Panel(FigletText(self.name), style=("bold black on white" if self.mouse_over else ""))
+        if self.mouse_over:
+            style = "bold black on white"
+        else:
+            style = ""
+        if self.clicked:
+            style = "bold white on green"
+        return Panel(FigletText(self.name), style=style)
 
     def on_enter(self) -> None:
         self.mouse_over = True
 
     def on_leave(self) -> None:
         self.mouse_over = False
+        self.clicked = False
 
     def on_click(self) -> None:
+        self.clicked = True
         name_candidate_id = {
             'Washington': 1,
             'Adams': 2,
@@ -61,10 +70,11 @@ class Hover(Widget):
             json={'candidate_id': name_candidate_id[self.name]}
         )
         r.raise_for_status()
-        exit(0)
 
 
 class CastApp(App):
+    show_bar = Reactive(False)
+
     async def on_load(self) -> None:
         """Bind keys here."""
         await self.bind("q", "quit", "Quit")
