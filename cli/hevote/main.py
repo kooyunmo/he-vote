@@ -111,8 +111,16 @@ def compare():
         res = r.json()
         latencies.append(res[0]['latency'])
 
-    plt.bar([e.value for e in HEScheme], latencies, orientation='horizontal', width=3/5)
+    plt.bar([e.value for e in HEScheme], latencies, width=3/5)
     plt.clc()
     plt.plot_size(100, 30)
     plt.title("Latency of HE schemes")
     plt.show()
+
+    console = Console()
+    table = Table(title="Latency of HE schemes")
+    for e in HEScheme:
+        table.add_column(e.value)
+
+    table.add_row(*list(map(lambda l: f"{l:.5f}", latencies)))
+    console.print(table)
