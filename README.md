@@ -1,4 +1,4 @@
-# he-vote
+# HE Vote
 
 Voting system based on additive symmetric homomorphic encryption
 
@@ -26,3 +26,7 @@ $ python manage.py runserver
 ## Swagger
 
 Go to `http://localhost:8000/api/schema/swagger-ui/#` and test REST APIs.
+
+## Demo
+
+[![asciicast](https://asciinema.org/a/TedALCJcXewM6uq5NPXN7xw9y.svg)](https://asciinema.org/a/TedALCJcXewM6uq5NPXN7xw9y)
